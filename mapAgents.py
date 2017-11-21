@@ -109,136 +109,6 @@ class Grid:
     def getWidth(self):
         return self.width
 
-#
-# An agent that creates a map.
-#
-# As currently implemented, the map places a % for each section of
-# wall, a * where there is food, and a space character otherwise. That
-# makes the display look nice. Other values will probably work better
-# for decision making.
-#
-class MapAgent(Agent):
-
-    # The constructor. We don't use this to create the map because it
-    # doesn't have access to state information.
-    def __init__(self):
-        print "Running init!"
-        self.last_move = Directions.STOP
-    # This function is run when the agent is created, and it has access
-    # to state information, so we use it to build a map for the agent.
-    def registerInitialState(self, state):
-         print "Running registerInitialState!"
-         # Make a map of the right size
-         self.makeMap(state)
-         self.addWallsToMap(state)
-         self.updateFoodInMap(state)
-         self.map.display()
-
-    # This is what gets run when the game ends.
-    def final(self, state):
-        print "Looks like I just died!"
-
-    # Make a map by creating a grid of the right size
-    def makeMap(self,state):
-        corners = api.corners(state)
-        print corners
-        height = self.getLayoutHeight(corners)
-        width  = self.getLayoutWidth(corners)
-        self.map = Grid(width, height)
-
-    # Functions to get the height and the width of the grid.
-    #
-    # We add one to the value returned by corners to switch from the
-    # index (returned by corners) to the size of the grid (that damn
-    # "start counting at zero" thing again).
-    def getLayoutHeight(self, corners):
-        height = -1
-        for i in range(len(corners)):
-            if corners[i][1] > height:
-                height = corners[i][1]
-        return height + 1
-
-    def getLayoutWidth(self, corners):
-        width = -1
-        for i in range(len(corners)):
-            if corners[i][0] > width:
-                width = corners[i][0]
-        return width + 1
-
-    # Functions to manipulate the map.
-    #
-    # Put every element in the list of wall elements into the map
-    def addWallsToMap(self, state):
-        walls = api.walls(state)
-        for i in range(len(walls)):
-            self.map.setValue(walls[i][0], walls[i][1], '%')
-
-    # Create a map with a current picture of the food that exists.
-    def updateFoodInMap(self, state):
-        # First, make all grid elements that aren't walls blank.
-        for i in range(self.map.getWidth()):
-            for j in range(self.map.getHeight()):
-                if self.map.getValue(i, j) != '%':
-                    self.map.setValue(i, j, ' ')
-        food = api.food(state)
-        for i in range(len(food)):
-            self.map.setValue(food[i][0], food[i][1], '*')
-
-    def outcome_prob(self, legal, direction) :
-        probability = 0
-        for d in legal :
-            if d == direction :
-                probability = 0.8
-            else :
-                probability = 0.1
-        return probability
-
-    # For now I just move randomly, but I display the map to show my progress
-    def getAction(self, state):
-        self.updateFoodInMap(state)
-        self.map.prettyDisplay()
-        pacman = api.whereAmI(state)
-
-        # Get the actions we can try, and remove "STOP" if that is one of them.
-        legal = api.legalActions(state)
-        if Directions.STOP in legal:
-            legal.remove(Directions.STOP)
-
-        utility = 0
-        utility_n = 0
-        best_direction = legal[0]
-
-        for direction in legal :
-            vec = Actions.directionToVector(direction)
-            loc = (pacman[0] + int(vec[0]), pacman[1] + int(vec[1]))
-            map_value = self.map.getValue(loc[0], loc[1])
-            print 'Direction : ', direction, 'Vec : ', vec, 'Map Value : ', map_value
-            # set a score value to the next grid point
-            if map_value == '%' :
-                next_value = 0
-            elif map_value == ' ' :
-                next_value = 1
-            elif map_value == '*' :
-                next_value = 10
-            elif map_value == '-' :
-                next_value = -100
-
-            print 'Next Value : ', next_value
-            probability = self.outcome_prob(legal, direction)
-            print 'Pribability : ', probability
-            utility_n = probability * next_value
-            print 'Utility : ', utility, 'Utility New : ', utility_n
-            if utility_n > utility :
-                best_direction = direction
-                utility = utility_n
-                print 'Best Direction : ', best_direction
-            print 'Legal : ', legal
-
-        if abs(utility) < 1 and (self.last_move in legal) :
-            return api.makeMove(self.last_move, legal)
-
-        return api.makeMove(best_direction, legal)
-
 class MDPAgent(Agent):
 
     # The constructor. We don't use this to create the map because it
@@ -327,19 +197,20 @@ class MDPAgent(Agent):
     def getAction(self, state):
         self.updateFoodInMap(state)
         self.updateGhosts(state)
-        #self.map.prettyDisplay()
-        #self.utilmap.prettyDisplay()
+        self.map.prettyDisplay()
+        self.utilmap.prettyDisplay()
         pacman = api.whereAmI(state)
 
         legal = api.legalActions(state)
         if Directions.STOP in legal:
             legal.remove(Directions.STOP)
-
+        U = []
         # checks each next legal direction
         for i in range(20) :
             for x in range(self.map.getWidth()-1) :
                 for y in range(self.map.getHeight()-1) :
                     for direction in legal :
+
                         # print direction, i
                         vec = Actions.directionToVector(direction)
                         loc = (int(x) + int(vec[0]), int(y) + int(vec[1]))
@@ -357,11 +228,13 @@ class MDPAgent(Agent):
 
                         # Calculate U here
                         gamma = 0.8
-                        U = (rewards[0] + gamma*((rewards[1]*0.8) + (rewards[2]*0.1) + (rewards[3]*0.1)))
+                        U.append(rewards[0] + gamma*((rewards[1]*0.8) + (rewards[2]*0.1) + (rewards[3]*0.1)))
 
-                        # set U
-                        self.utilmap.setValue(int(x), int(y), U)
-                        # print best_direction, '   ', U
+
+                    # set U
+                    self.utilmap.setValue(int(x), int(y), max(U))
+                    U = []
+                    # print best_direction, '   ', U
 
         # outside all loops
         U_all = []
