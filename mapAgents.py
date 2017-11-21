@@ -306,6 +306,11 @@ class MDPAgent(Agent):
         for i in range(len(food)):
             self.map.setValue(food[i][0], food[i][1], '*')
 
+    def updateGhosts(self, state) :
+        locations = api.ghosts(state)
+        for i in range(len(locations)) :
+            self.map.setValue(int(locations[i][0]),int(locations[i][1]), '-')
+
 
     def outcome_prob(self, legal, direction) :
         probability = 0
@@ -334,10 +339,11 @@ class MDPAgent(Agent):
     # For now I just move randomly, but I display the map to show my progress
     def getAction(self, state):
         self.updateFoodInMap(state)
-        self.map.prettyDisplay()
-        self.utilmap.prettyDisplay()
+        self.updateGhosts(state)
+        #self.map.prettyDisplay()
+        #self.utilmap.prettyDisplay()
         pacman = api.whereAmI(state)
-        ghosts = api.ghosts(state)
+
 
         legal = api.legalActions(state)
         if Directions.STOP in legal:
@@ -346,7 +352,7 @@ class MDPAgent(Agent):
         maxU = -500
         best_direction = Directions.STOP
         # checks each next legal direction
-        for i in range(40) :
+        for i in range(20) :
             for x in range(self.map.getWidth()-1) :
                 for y in range(self.map.getHeight()-1) :
                     for direction in legal :
@@ -366,7 +372,7 @@ class MDPAgent(Agent):
                         rewards = [self.getReward([int(x),int(y)]), self.getReward(loc), self.getReward(loc_a), self.getReward(loc_b)]
 
                         # Calculate U here
-                        gamma = 0.5
+                        gamma = 0.8
                         U = (rewards[0] + gamma*((rewards[1]*0.8) + (rewards[2]*0.1) + (rewards[3]*0.1)))
 
                         # set U
