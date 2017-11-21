@@ -254,7 +254,7 @@ class MDPAgent(Agent):
          self.makeMap(state)
          self.addWallsToMap(state)
          self.updateFoodInMap(state)
-         self.map.display()
+         # self.map.display()
 
     # This is what gets run when the game ends.
     def final(self, state):
@@ -263,7 +263,7 @@ class MDPAgent(Agent):
     # Make a map by creating a grid of the right size
     def makeMap(self,state):
         corners = api.corners(state)
-        print corners
+        # print corners
         height = self.getLayoutHeight(corners)
         width  = self.getLayoutWidth(corners)
         self.map = Grid(width, height)
@@ -306,6 +306,7 @@ class MDPAgent(Agent):
         for i in range(len(food)):
             self.map.setValue(food[i][0], food[i][1], '*')
 
+
     def outcome_prob(self, legal, direction) :
         probability = 0
         for d in legal :
@@ -336,6 +337,7 @@ class MDPAgent(Agent):
         self.map.prettyDisplay()
         self.utilmap.prettyDisplay()
         pacman = api.whereAmI(state)
+        ghosts = api.ghosts(state)
 
         legal = api.legalActions(state)
         if Directions.STOP in legal:
@@ -344,34 +346,41 @@ class MDPAgent(Agent):
         maxU = -500
         best_direction = Directions.STOP
         # checks each next legal direction
-        for i in range(1000) :
-            for x,y in itertools.product(range(self.map.getWidth()),range(self.map.getHeight()))
-                for direction in legal :
-                    print direction, i
-                    vec = Actions.directionToVector(direction)
-                    loc = (x + int(vec[0]), y + int(vec[1]))
-                    values = self.utilmap.getValue(loc[0], loc[1])
+        for i in range(40) :
+            for x in range(self.map.getWidth()-1) :
+                for y in range(self.map.getHeight()-1) :
+                    for direction in legal :
+                        # print direction, i
+                        vec = Actions.directionToVector(direction)
+                        loc = (int(x) + int(vec[0]), int(y) + int(vec[1]))
+                        values = self.utilmap.getValue(loc[0], loc[1])
 
-                    # vectors and locations for either side of the current direction
-                    side_a = [vec[1],vec[0]]
-                    loc_a = (x + side_a[0], y + side_a[1])
+                        # vectors and locations for either side of the current direction
+                        side_a = [vec[1],vec[0]]
+                        loc_a = (x + side_a[0], y + side_a[1])
 
-                    side_b = [-side_a[0], -side_a[1]]
-                    loc_b = (x + side_b[0], y + side_b[1])
+                        side_b = [-side_a[0], -side_a[1]]
+                        loc_b = (x + side_b[0], y + side_b[1])
 
-                    # get rewards of all three potential directions
-                    rewards = [self.getReward(loc), self.getReward(loc_a), self.getReward(loc_b)]
+                        # get rewards of all three potential directions
+                        rewards = [self.getReward([int(x),int(y)]), self.getReward(loc), self.getReward(loc_a), self.getReward(loc_b)]
 
-                    # Calculate U here
-                    U = (rewards[0]*0.8) + (rewards[1]*0.1) + (rewards[2]*0.1)
-                    if U > maxU :
-                        maxU = U
-                        best_direction = direction
+                        # Calculate U here
+                        gamma = 0.5
+                        U = (rewards[0] + gamma*((rewards[1]*0.8) + (rewards[2]*0.1) + (rewards[3]*0.1)))
 
-                    # set U
-                    self.utilmap.setValue(loc[0], loc[1], U)
-                    # print best_direction, '   ', U
+                        # set U
+                        self.utilmap.setValue(int(x), int(y), U)
+                        # print best_direction, '   ', U
 
+        # outside all loops
+        U_all = []
+        for i in range(len(legal)) :
+            vec = Actions.directionToVector(legal[i])
+            loc = (int(pacman[0])+int(vec[0]), int(pacman[1])+int(vec[1]))
+            U_all.append(self.utilmap.getValue(loc[0], loc[1]))
 
+        ind = U_all.index(max(U_all))
+        move = legal[ind]
         self.utilmap.setValue(pacman[0],pacman[1], -1)
-        return api.makeMove(best_direction, legal)
+        return api.makeMove(move, legal)
