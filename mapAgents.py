@@ -288,7 +288,6 @@ class MDPAgent(Agent):
         return width + 1
 
     # Functions to manipulate the map.
-    #
     # Put every element in the list of wall elements into the map
     def addWallsToMap(self, state):
         walls = api.walls(state)
@@ -332,13 +331,10 @@ class MDPAgent(Agent):
         #self.utilmap.prettyDisplay()
         pacman = api.whereAmI(state)
 
-
         legal = api.legalActions(state)
         if Directions.STOP in legal:
             legal.remove(Directions.STOP)
 
-        maxU = -500
-        best_direction = Directions.STOP
         # checks each next legal direction
         for i in range(20) :
             for x in range(self.map.getWidth()-1) :
