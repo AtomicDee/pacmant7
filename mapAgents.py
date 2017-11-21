@@ -36,6 +36,7 @@ import util
 import sys
 import math
 import numpy as np
+import itertools
 
 #
 # A class that creates a grid that can be used as a map
@@ -343,31 +344,33 @@ class MDPAgent(Agent):
         maxU = -500
         best_direction = Directions.STOP
         # checks each next legal direction
-        for i in range(20) :
-            for direction in legal :
-                vec = Actions.directionToVector(direction)
-                loc = (pacman[0] + int(vec[0]), pacman[1] + int(vec[1]))
-                values = self.utilmap.getValue(loc[0], loc[1])
+        for i in range(1000) :
+            for x,y in itertools.product(range(self.map.getWidth()),range(self.map.getHeight()))
+                for direction in legal :
+                    print direction, i
+                    vec = Actions.directionToVector(direction)
+                    loc = (x + int(vec[0]), y + int(vec[1]))
+                    values = self.utilmap.getValue(loc[0], loc[1])
 
-                # vectors and locations for either side of the current direction
-                side_a = [vec[1],vec[0]]
-                loc_a = (pacman[0] + side_a[0], pacman[1] + side_a[1])
+                    # vectors and locations for either side of the current direction
+                    side_a = [vec[1],vec[0]]
+                    loc_a = (x + side_a[0], y + side_a[1])
 
-                side_b = [-side_a[0], -side_a[1]]
-                loc_b = (pacman[0] + side_b[0], pacman[1] + side_b[1])
+                    side_b = [-side_a[0], -side_a[1]]
+                    loc_b = (x + side_b[0], y + side_b[1])
 
-                # get rewards of all three potential directions
-                rewards = [self.getReward(loc), self.getReward(loc_a), self.getReward(loc_b)]
+                    # get rewards of all three potential directions
+                    rewards = [self.getReward(loc), self.getReward(loc_a), self.getReward(loc_b)]
 
-                # Calculate U here
-                U = (rewards[0]*0.8) + (rewards[1]*0.1) + (rewards[2]*0.1)
-                if U > maxU :
-                    maxU = U
-                    best_direction = direction
+                    # Calculate U here
+                    U = (rewards[0]*0.8) + (rewards[1]*0.1) + (rewards[2]*0.1)
+                    if U > maxU :
+                        maxU = U
+                        best_direction = direction
 
-                # set U
-                self.utilmap.setValue(loc[0], loc[1], U)
-                print best_direction, '   ', U
+                    # set U
+                    self.utilmap.setValue(loc[0], loc[1], U)
+                    # print best_direction, '   ', U
 
 
         self.utilmap.setValue(pacman[0],pacman[1], -1)
