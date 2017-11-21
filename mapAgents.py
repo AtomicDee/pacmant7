@@ -311,18 +311,6 @@ class MDPAgent(Agent):
         for i in range(len(locations)) :
             self.map.setValue(int(locations[i][0]),int(locations[i][1]), '-')
 
-
-    def outcome_prob(self, legal, direction) :
-        probability = 0
-        for d in legal :
-            if d == direction :
-                probability = 0.8
-            elif d == Actions.reverseDirection(direction) :
-                probability = 0
-            else :
-                probability = 0.1
-        return probability
-
     def getReward(self, loc) :
         map_value = self.map.getValue(int(loc[0]), int(loc[1]))
         # return reward based on contents of passed location
