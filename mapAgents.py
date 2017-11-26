@@ -199,6 +199,7 @@ class MDPAgent(Agent):
         self.updateFoodInMap(state)
         self.updateGhosts(state)
         pacman = api.whereAmI(state)
+        self.map.prettyDisplay()
 
         legal = api.legalActions(state)
         all_directions = [Directions.NORTH, Directions.EAST, Directions.SOUTH, Directions.WEST]
@@ -206,7 +207,6 @@ class MDPAgent(Agent):
         if Directions.STOP in legal:
             legal.remove(Directions.STOP)
         U = []
-        count = 0
         # checks each next legal direction
         for i in range(10) :
             for x in range(1,self.map.getWidth()-1) :
@@ -218,7 +218,7 @@ class MDPAgent(Agent):
                         # values = self.map.getValue(loc[0], loc[1])
 
                         # vectors and locations for either side of the current direction
-                        side_a = [vec[1],vec[0]]
+                        side_a = [int(vec[1]),int(vec[0])]
                         loc_a = (x + side_a[0], y + side_a[1])
 
                         side_b = [-side_a[0], -side_a[1]]
@@ -229,10 +229,10 @@ class MDPAgent(Agent):
                         print "loc_a : ", loc_a
                         print "loc_b : ", loc_b
                         # get rewards of all three potential directions
-                        if count == 0 :
+                        if i == 0 :
                             rewards = [self.getReward([int(x),int(y)]), self.getReward(loc), self.getReward(loc_a), self.getReward(loc_b)]
                         else :
-                            rewards = [self.utilmap.getValue(int(x),int(y)), self.utilmap.getValue(loc[0], loc[1]), self.utilmap.getValue(loc_a[0], loc_a[1]), self.utilmap.getValue(loc_b[0], loc_b[1])]
+                            rewards = [self.prevmap.getValue(int(x),int(y)), self.prevmap.getValue(loc[0], loc[1]), self.prevmap.getValue(loc_a[0], loc_a[1]), self.prevmap.getValue(loc_b[0], loc_b[1])]
                         print "Rewards : ", rewards, " Direction : ", direction
                         raw_input("Press Enter to continue : ")
                         # Calculate U here
@@ -243,7 +243,7 @@ class MDPAgent(Agent):
                     # set U
                     print "U : ", U
                     print "max(U): ", max(U)
-                    print "Previous utilmap value: ", self.utilmap.getValue(int(x), int(y))
+                    print "Previous utilmap value: ", self.prevmap.getValue(int(x), int(y))
                     raw_input("Press Enter to continue : ")
 
                     m = max(U)
@@ -256,17 +256,15 @@ class MDPAgent(Agent):
 
                     # print best_direction, '   ', U
                     # save previous map, use previous map values to update new one
-            count += 1
-        # self.map.prettyDisplay()
-        # print " Previous map "
-        # self.prevmap.prettyDisplay()
-        # print " New Map "
-        # self.utilmap.prettyDisplay()
+                    
+            # Set previous map as the newly calculated one
+            self.prevmap = self.utilmap
 
-
-
-        # Set previous map as the newly calculated one
-        # self.prevmap = self.utilmap
+        self.map.prettyDisplay()
+        print " Previous map "
+        self.prevmap.prettyDisplay()
+        print " New Map "
+        self.utilmap.prettyDisplay()
 
         # outside all loops
         U_all = []
