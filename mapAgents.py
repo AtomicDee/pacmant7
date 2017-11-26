@@ -138,6 +138,7 @@ class MDPAgent(Agent):
         width  = self.getLayoutWidth(corners)
         self.map = Grid(width, height)
         self.utilmap = Grid(width, height)
+        self.prevmap = Grid(width, height)
 
     # Functions to get the height and the width of the grid.
     # We add one to the value returned by corners to switch from the
@@ -197,24 +198,23 @@ class MDPAgent(Agent):
     def getAction(self, state):
         self.updateFoodInMap(state)
         self.updateGhosts(state)
-        self.map.prettyDisplay()
-        self.utilmap.prettyDisplay()
         pacman = api.whereAmI(state)
 
         legal = api.legalActions(state)
+        all_directions = [Directions.NORTH, Directions.EAST, Directions.SOUTH, Directions.WEST]
+
         if Directions.STOP in legal:
             legal.remove(Directions.STOP)
         U = []
         # checks each next legal direction
-        for i in range(20) :
+        for i in range(10) :
             for x in range(self.map.getWidth()-1) :
                 for y in range(self.map.getHeight()-1) :
-                    for direction in legal :
-
+                    for direction in all_directions : # run for all directions not just legal.
                         # print direction, i
                         vec = Actions.directionToVector(direction)
                         loc = (int(x) + int(vec[0]), int(y) + int(vec[1]))
-                        values = self.utilmap.getValue(loc[0], loc[1])
+                        # values = self.map.getValue(loc[0], loc[1])
 
                         # vectors and locations for either side of the current direction
                         side_a = [vec[1],vec[0]]
@@ -222,28 +222,54 @@ class MDPAgent(Agent):
 
                         side_b = [-side_a[0], -side_a[1]]
                         loc_b = (x + side_b[0], y + side_b[1])
-
+                        print "Location current : ", (x,y)
+                        print "loc : ", loc
+                        print "loc_a : ", loc_a
+                        print "loc_b : ", loc_b
                         # get rewards of all three potential directions
                         rewards = [self.getReward([int(x),int(y)]), self.getReward(loc), self.getReward(loc_a), self.getReward(loc_b)]
-
+                        print "Rewards : ", Rewards, " Direction : ", direction
+                        raw_input("Press Enter to continue : ")
                         # Calculate U here
                         gamma = 0.8
                         U.append(rewards[0] + gamma*((rewards[1]*0.8) + (rewards[2]*0.1) + (rewards[3]*0.1)))
 
 
                     # set U
+                    print "U : ", U
+                    print "max(U): ", max(U)
+                    print "Previous utilmap value: ", self.utilmap.getValue(int(x), int(y))
+                    raw_input("Press Enter to continue : ")
+
                     self.utilmap.setValue(int(x), int(y), max(U))
                     U = []
+                    # Check value differences
+
                     # print best_direction, '   ', U
+                    # save previous map, use previous map values to update new one
+
+        # self.map.prettyDisplay()
+        # print " Previous map "
+        # self.prevmap.prettyDisplay()
+        # print " New Map "
+        # self.utilmap.prettyDisplay()
+
+
+
+        # Set previous map as the newly calculated one
+        # self.prevmap = self.utilmap
 
         # outside all loops
         U_all = []
+
         for i in range(len(legal)) :
             vec = Actions.directionToVector(legal[i])
             loc = (int(pacman[0])+int(vec[0]), int(pacman[1])+int(vec[1]))
             U_all.append(self.utilmap.getValue(loc[0], loc[1]))
 
+        print 'u all', U_all
         ind = U_all.index(max(U_all))
         move = legal[ind]
         self.utilmap.setValue(pacman[0],pacman[1], -1)
+        #raw_input('Press <ENTER> to continue')
         return api.makeMove(move, legal)
