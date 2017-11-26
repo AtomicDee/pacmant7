@@ -206,6 +206,7 @@ class MDPAgent(Agent):
         if Directions.STOP in legal:
             legal.remove(Directions.STOP)
         U = []
+        count = 0
         # checks each next legal direction
         for i in range(10) :
             for x in range(1,self.map.getWidth()-1) :
@@ -228,7 +229,10 @@ class MDPAgent(Agent):
                         print "loc_a : ", loc_a
                         print "loc_b : ", loc_b
                         # get rewards of all three potential directions
-                        rewards = [self.getReward([int(x),int(y)]), self.getReward(loc), self.getReward(loc_a), self.getReward(loc_b)]
+                        if count == 0 :
+                            rewards = [self.getReward([int(x),int(y)]), self.getReward(loc), self.getReward(loc_a), self.getReward(loc_b)]
+                        else :
+                            rewards = [self.utilmap.getValue(int(x),int(y)), self.utilmap.getValue(loc[0], loc[1]), self.utilmap.getValue(loc_a[0], loc_a[1]), self.utilmap.getValue(loc_b[0], loc_b[1])]
                         print "Rewards : ", rewards, " Direction : ", direction
                         raw_input("Press Enter to continue : ")
                         # Calculate U here
@@ -252,7 +256,7 @@ class MDPAgent(Agent):
 
                     # print best_direction, '   ', U
                     # save previous map, use previous map values to update new one
-
+            count += 1
         # self.map.prettyDisplay()
         # print " Previous map "
         # self.prevmap.prettyDisplay()
