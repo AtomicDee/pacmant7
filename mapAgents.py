@@ -208,8 +208,8 @@ class MDPAgent(Agent):
         U = []
         # checks each next legal direction
         for i in range(10) :
-            for x in range(self.map.getWidth()-1) :
-                for y in range(self.map.getHeight()-1) :
+            for x in range(1,self.map.getWidth()-1) :
+                for y in range(1,self.map.getHeight()-1) :
                     for direction in all_directions : # run for all directions not just legal.
                         # print direction, i
                         vec = Actions.directionToVector(direction)
@@ -222,13 +222,14 @@ class MDPAgent(Agent):
 
                         side_b = [-side_a[0], -side_a[1]]
                         loc_b = (x + side_b[0], y + side_b[1])
+                        print "Pacman location : ", pacman
                         print "Location current : ", (x,y)
                         print "loc : ", loc
                         print "loc_a : ", loc_a
                         print "loc_b : ", loc_b
                         # get rewards of all three potential directions
                         rewards = [self.getReward([int(x),int(y)]), self.getReward(loc), self.getReward(loc_a), self.getReward(loc_b)]
-                        print "Rewards : ", Rewards, " Direction : ", direction
+                        print "Rewards : ", rewards, " Direction : ", direction
                         raw_input("Press Enter to continue : ")
                         # Calculate U here
                         gamma = 0.8
@@ -243,6 +244,7 @@ class MDPAgent(Agent):
 
                     self.utilmap.setValue(int(x), int(y), max(U))
                     U = []
+                    self.utilmap.prettyDisplay()
                     # Check value differences
 
                     # print best_direction, '   ', U
