@@ -242,7 +242,10 @@ class MDPAgent(Agent):
                     print "Previous utilmap value: ", self.utilmap.getValue(int(x), int(y))
                     raw_input("Press Enter to continue : ")
 
-                    self.utilmap.setValue(int(x), int(y), max(U))
+                    m = max(U)
+                    if self.map.getValue(int(x), int(y)) == '%' :
+                        m = 0-m
+                    self.utilmap.setValue(int(x), int(y), m)
                     U = []
                     self.utilmap.prettyDisplay()
                     # Check value differences
