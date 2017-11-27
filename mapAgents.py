@@ -207,8 +207,9 @@ class MDPAgent(Agent):
         if Directions.STOP in legal:
             legal.remove(Directions.STOP)
         sumpu = []
+        diff = 0
         # checks each next legal direction
-        for i in range(10) :
+        while abs(diff) > 0.001 :
             for x in range(1,self.map.getWidth()-1) :
                 for y in range(1,self.map.getHeight()-1) :
                     for direction in all_directions : # run for all directions not just legal.
@@ -242,20 +243,20 @@ class MDPAgent(Agent):
                         sumpu.append((gamma**i)*rewardsum)
 
                     # Calculate final U(s) value
-                    # print "sumpu : ", sumpu
                     U = rewards[0] + max(sumpu)
                     sumpu = []
                     if self.map.getValue(int(x), int(y)) == '%' :
                         U = 0-U
                     # set U
-                    # print "U : ", U
                     # print "max(U): ", max(U)
                     # print "Previous utilmap value: ", self.prevmap.getValue(int(x), int(y))
                     # Sum each U value to calculate a difference to control while loop
-                    if (x == self.map.getWidth()-1) and (y == self.map.getHeight()-1) :
+                    print x == self.map.getWidth()-2, y == self.map.getHeight()-2
+                    if (x == self.map.getWidth()-2) and (y == self.map.getHeight()-2) :
                         diff = self.prevmap.getValue(int(x), int(y)) - U
                         print "Difference : ", diff
-                        raw_input("Press Enter to continue : ")
+
+                    raw_input("Press Enter to continue : ")
 
                     self.utilmap.setValue(int(x), int(y), U)
                     # U = []
