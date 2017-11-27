@@ -207,7 +207,7 @@ class MDPAgent(Agent):
         if Directions.STOP in legal:
             legal.remove(Directions.STOP)
         sumpu = []
-        diff = 0
+        diff = float('inf')
         # checks each next legal direction
         while abs(diff) > 0.001 :
             for x in range(1,self.map.getWidth()-1) :
