@@ -223,11 +223,11 @@ class MDPAgent(Agent):
 
                         side_b = [-side_a[0], -side_a[1]]
                         loc_b = (x + side_b[0], y + side_b[1])
-                        print "Pacman location : ", pacman
-                        print "Location current : ", (x,y)
-                        print "loc : ", loc
-                        print "loc_a : ", loc_a
-                        print "loc_b : ", loc_b
+                        # print "Pacman location : ", pacman
+                        # print "Location current : ", (x,y)
+                        # print "loc : ", loc
+                        # print "loc_a : ", loc_a
+                        # print "loc_b : ", loc_b
                         # get rewards of all three potential directions
                         if i == 0 :
                             rewards = [self.getReward([int(x),int(y)]), self.getReward(loc), self.getReward(loc_a), self.getReward(loc_b)]
@@ -235,11 +235,13 @@ class MDPAgent(Agent):
                             rewards = [self.getReward([int(x),int(y)]), self.prevmap.getValue(loc[0], loc[1]), self.prevmap.getValue(loc_a[0], loc_a[1]), self.prevmap.getValue(loc_b[0], loc_b[1])]
                         print "Rewards : ", rewards, " Direction : ", direction
                         raw_input("Press Enter to continue : ")
-                        # Calculate U here
-                        gamma = 0.9
-                        print "gamma powered : ", gamma**i
+
+                        # Calculate the sum part of U(s) here
+                        gamma = 0.5
                         rewardsum = (rewards[1]*0.8) + (rewards[2]*0.1) + (rewards[3]*0.1)
                         sumpu.append((gamma**i)*rewardsum)
+
+                    # Calculate final U(s) value
                     print "sumpu : ", sumpu
                     U = rewards[0] + max(sumpu)
                     sumpu = []
@@ -254,10 +256,11 @@ class MDPAgent(Agent):
                     self.utilmap.setValue(int(x), int(y), U)
                     # U = []
                     self.utilmap.prettyDisplay()
-                    # Check value differences
 
-                    # print best_direction, '   ', U
-                    # save previous map, use previous map values to update new one
+                    # Sum each U value to calculate a difference to control while loop
+                    diff = self.prevmap.getValue(int(x), int(y)) - self.utilmap.getValue(int(x), int(y))
+                    print "Difference : ", diff
+
 
             # Set previous map as the newly calculated one
             self.prevmap = self.utilmap
