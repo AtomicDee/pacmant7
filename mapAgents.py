@@ -206,7 +206,7 @@ class MDPAgent(Agent):
 
         if Directions.STOP in legal:
             legal.remove(Directions.STOP)
-        U = []
+        sumpu = []
         # checks each next legal direction
         for i in range(10) :
             for x in range(1,self.map.getWidth()-1) :
@@ -232,7 +232,7 @@ class MDPAgent(Agent):
                         if i == 0 :
                             rewards = [self.getReward([int(x),int(y)]), self.getReward(loc), self.getReward(loc_a), self.getReward(loc_b)]
                         else :
-                            rewards = [self.prevmap.getValue(int(x),int(y)), self.prevmap.getValue(loc[0], loc[1]), self.prevmap.getValue(loc_a[0], loc_a[1]), self.prevmap.getValue(loc_b[0], loc_b[1])]
+                            rewards = [self.getReward([int(x),int(y)]), self.prevmap.getValue(loc[0], loc[1]), self.prevmap.getValue(loc_a[0], loc_a[1]), self.prevmap.getValue(loc_b[0], loc_b[1])]
                         print "Rewards : ", rewards, " Direction : ", direction
                         raw_input("Press Enter to continue : ")
                         # Calculate U here
@@ -246,9 +246,8 @@ class MDPAgent(Agent):
                     print "Previous utilmap value: ", self.prevmap.getValue(int(x), int(y))
                     raw_input("Press Enter to continue : ")
 
-                    # m = max(U)
-                    # if self.map.getValue(int(x), int(y)) == '%' :
-                    #     m = 0-m
+                    if self.map.getValue(int(x), int(y)) == '%' :
+                        U = 0-U
                     self.utilmap.setValue(int(x), int(y), U)
                     # U = []
                     self.utilmap.prettyDisplay()
