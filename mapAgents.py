@@ -236,7 +236,7 @@ class MDPAgent(Agent):
                         print "Rewards : ", rewards, " Direction : ", direction
                         raw_input("Press Enter to continue : ")
                         # Calculate U here
-                        gamma = 0.8
+                        gamma = 0.5
                         sumpu.append(gamma*((rewards[1]*0.8) + (rewards[2]*0.1) + (rewards[3]*0.1)))
 
                     U = rewards[0] + max(sumpu)
