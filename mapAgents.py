@@ -116,6 +116,9 @@ class MDPAgent(Agent):
     def __init__(self):
         print "Running init!"
         self.last_move = Directions.STOP
+        self.previous = (float('inf'),float('inf'))
+        self.food = set()
+        self.lastfood = float('inf')
     # This function is run when the agent is created, and it has access
     # to state information, so we use it to build a map for the agent.
     def registerInitialState(self, state):
@@ -172,6 +175,9 @@ class MDPAgent(Agent):
             for j in range(self.map.getHeight()):
                 if self.map.getValue(i, j) != '%':
                     self.map.setValue(i, j, ' ')
+
+                if (i,j) == self.previous :
+                    self.map.setValue(i, j, 'p')
         food = api.food(state)
         for i in range(len(food)):
             self.map.setValue(food[i][0], food[i][1], '*')
@@ -193,26 +199,15 @@ class MDPAgent(Agent):
         elif map_value == '-' :
             reward = -100.0
         elif map_value == 'p' :
-            reward = -5
+            reward = -10.0
         return reward
 
-    # For now I just move randomly, but I display the map to show my progress
-    def getAction(self, state):
-        self.updateFoodInMap(state)
-        self.updateGhosts(state)
-        pacman = api.whereAmI(state)
-        self.map.prettyDisplay()
-
-        legal = api.legalActions(state)
-        all_directions = [Directions.NORTH, Directions.EAST, Directions.SOUTH, Directions.WEST]
-
-        if Directions.STOP in legal:
-            legal.remove(Directions.STOP)
+    def BellmanUpdate(self, state, all_directions) :
         sumpu = []
         diff = 999999
         count = 0
         # checks each next legal direction
-        while abs(diff) > 0.001 :
+        while abs(diff) > 0.01 :
             count += 1
             for x in range(1,self.map.getWidth()-1) :
                 for y in range(1,self.map.getHeight()-1) :
@@ -220,7 +215,7 @@ class MDPAgent(Agent):
                         # print direction, i
                         vec = Actions.directionToVector(direction)
                         loc = (int(x) + int(vec[0]), int(y) + int(vec[1]))
-                        # values = self.map.getValue(loc[0], loc[1])
+
 
                         # vectors and locations for either side of the current direction
                         side_a = [int(vec[1]),int(vec[0])]
@@ -228,64 +223,70 @@ class MDPAgent(Agent):
 
                         side_b = [-side_a[0], -side_a[1]]
                         loc_b = (x + side_b[0], y + side_b[1])
-                        # print "Pacman location : ", pacman
-                        # print "Location current : ", (x,y)
-                        # print "loc : ", loc
-                        # print "loc_a : ", loc_a
-                        # print "loc_b : ", loc_b
+
                         # get rewards of all three potential directions
                         if count == 0 :
+                            # if its the first iteration, get arbitrary rewards set by grid point type
+                            # eg. food, wall, empty, ghost, pacman.
                             rewards = [self.getReward([int(x),int(y)]), self.getReward(loc), self.getReward(loc_a), self.getReward(loc_b)]
                         else :
+                            # After initial run, take rewards from previously calculated utilities
                             rewards = [self.getReward([int(x),int(y)]), self.prevmap.getValue(loc[0], loc[1]), self.prevmap.getValue(loc_a[0], loc_a[1]), self.prevmap.getValue(loc_b[0], loc_b[1])]
-                        # print "Rewards : ", rewards, " Direction : ", direction
-                        # raw_input("Press Enter to continue : ")
 
-                        # Calculate the sum part of U(s) here
-                        gamma = 0.5
+                        # Calculate the sum part of Bellman eq here
+                        gamma = 0.7
                         rewardsum = (rewards[1]*0.8) + (rewards[2]*0.1) + (rewards[3]*0.1)
-                        sumpu.append((gamma**count)*rewardsum)
+                        sumpu.append(gamma*rewardsum)
 
                     # Calculate final U(s) value
                     U = rewards[0] + max(sumpu)
                     sumpu = []
                     if self.map.getValue(int(x), int(y)) == '%' :
                         U = 0-U
-                    # set U
-                    # print "max(U): ", max(U)
-                    # print "Previous utilmap value: ", self.prevmap.getValue(int(x), int(y))
+
                     # Sum each U value to calculate a difference to control while loop
-                    print x == self.map.getWidth()-2, y == self.map.getHeight()-2
                     if (x == self.map.getWidth()-2) and (y == self.map.getHeight()-2) :
                         diff = self.prevmap.getValue(int(x), int(y)) - U
-                        print "Difference : ", diff
 
-                    raw_input("Press Enter to continue : ")
-
+                    # Set new utilmap value
                     self.utilmap.setValue(int(x), int(y), U)
-                    # U = []
-                    self.utilmap.prettyDisplay()
 
-            # Set previous map as the newly calculated one
+            # Set previous map as the newly calculated one after the whole map is done
             self.prevmap = self.utilmap
 
-        self.map.prettyDisplay()
-        print " Previous map "
-        self.prevmap.prettyDisplay()
-        print " New Map "
-        self.utilmap.prettyDisplay()
+    # For now I just move randomly, but I display the map to show my progress
+    def getAction(self, state):
+        # print self.previous
+        self.updateFoodInMap(state)
+        self.updateGhosts(state)
+        pacman = api.whereAmI(state)
+        # self.map.prettyDisplay()
 
-        # outside all loops
+        # initialise direction variables
+        legal = api.legalActions(state)
+        all_directions = [Directions.NORTH, Directions.EAST, Directions.SOUTH, Directions.WEST]
+        if Directions.STOP in legal:
+            legal.remove(Directions.STOP)
+
+        # Update utility maps
+        self.BellmanUpdate(state, all_directions)
+
+        # save all utilities around pacman, in legal directions
         U_all = []
-
         for i in range(len(legal)) :
             vec = Actions.directionToVector(legal[i])
             loc = (int(pacman[0])+int(vec[0]), int(pacman[1])+int(vec[1]))
             U_all.append(self.utilmap.getValue(loc[0], loc[1]))
 
-        print 'u all', U_all
+        # Choose the largest utility around pacman
         ind = U_all.index(max(U_all))
+        # Get corresponding move
         move = legal[ind]
+        # Set pacman's last location as p - will pull a reward value of -50 to discourage
+        # pacman from moving backwards
         self.map.setValue(pacman[0],pacman[1], 'p')
+        self.previous = pacman
         #raw_input('Press <ENTER> to continue')
+
+        # move
         return api.makeMove(move, legal)
