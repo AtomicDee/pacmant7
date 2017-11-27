@@ -237,26 +237,26 @@ class MDPAgent(Agent):
                         raw_input("Press Enter to continue : ")
                         # Calculate U here
                         gamma = 0.8
-                        U.append(rewards[0] + gamma*((rewards[1]*0.8) + (rewards[2]*0.1) + (rewards[3]*0.1)))
+                        sumpu.append(gamma*((rewards[1]*0.8) + (rewards[2]*0.1) + (rewards[3]*0.1)))
 
-
+                    U = rewards[0] + max(sumpu))
                     # set U
                     print "U : ", U
-                    print "max(U): ", max(U)
+                    # print "max(U): ", max(U)
                     print "Previous utilmap value: ", self.prevmap.getValue(int(x), int(y))
                     raw_input("Press Enter to continue : ")
 
-                    m = max(U)
-                    if self.map.getValue(int(x), int(y)) == '%' :
-                        m = 0-m
-                    self.utilmap.setValue(int(x), int(y), m)
-                    U = []
+                    # m = max(U)
+                    # if self.map.getValue(int(x), int(y)) == '%' :
+                    #     m = 0-m
+                    self.utilmap.setValue(int(x), int(y), U)
+                    # U = []
                     self.utilmap.prettyDisplay()
                     # Check value differences
 
                     # print best_direction, '   ', U
                     # save previous map, use previous map values to update new one
-                    
+
             # Set previous map as the newly calculated one
             self.prevmap = self.utilmap
 
