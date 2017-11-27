@@ -192,6 +192,8 @@ class MDPAgent(Agent):
             reward = 10.0
         elif map_value == '-' :
             reward = -100.0
+        elif map_value == 'p' :
+            reward = -5
         return reward
 
     # For now I just move randomly, but I display the map to show my progress
@@ -207,9 +209,11 @@ class MDPAgent(Agent):
         if Directions.STOP in legal:
             legal.remove(Directions.STOP)
         sumpu = []
-        diff = float('inf')
+        diff = 999999
+        count = 0
         # checks each next legal direction
         while abs(diff) > 0.001 :
+            count += 1
             for x in range(1,self.map.getWidth()-1) :
                 for y in range(1,self.map.getHeight()-1) :
                     for direction in all_directions : # run for all directions not just legal.
@@ -230,7 +234,7 @@ class MDPAgent(Agent):
                         # print "loc_a : ", loc_a
                         # print "loc_b : ", loc_b
                         # get rewards of all three potential directions
-                        if i == 0 :
+                        if count == 0 :
                             rewards = [self.getReward([int(x),int(y)]), self.getReward(loc), self.getReward(loc_a), self.getReward(loc_b)]
                         else :
                             rewards = [self.getReward([int(x),int(y)]), self.prevmap.getValue(loc[0], loc[1]), self.prevmap.getValue(loc_a[0], loc_a[1]), self.prevmap.getValue(loc_b[0], loc_b[1])]
@@ -240,7 +244,7 @@ class MDPAgent(Agent):
                         # Calculate the sum part of U(s) here
                         gamma = 0.5
                         rewardsum = (rewards[1]*0.8) + (rewards[2]*0.1) + (rewards[3]*0.1)
-                        sumpu.append((gamma**i)*rewardsum)
+                        sumpu.append((gamma**count)*rewardsum)
 
                     # Calculate final U(s) value
                     U = rewards[0] + max(sumpu)
@@ -282,6 +286,6 @@ class MDPAgent(Agent):
         print 'u all', U_all
         ind = U_all.index(max(U_all))
         move = legal[ind]
-        self.utilmap.setValue(pacman[0],pacman[1], -1)
+        self.map.setValue(pacman[0],pacman[1], 'p')
         #raw_input('Press <ENTER> to continue')
         return api.makeMove(move, legal)
