@@ -242,6 +242,7 @@ class MDPAgent(Agent):
                         sumpu.append((gamma**i)*rewardsum)
                     print "sumpu : ", sumpu
                     U = rewards[0] + max(sumpu)
+                    sumpu = []
                     # set U
                     print "U : ", U
                     # print "max(U): ", max(U)
