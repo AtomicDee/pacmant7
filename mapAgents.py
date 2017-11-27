@@ -119,6 +119,7 @@ class MDPAgent(Agent):
         self.previous = (float('inf'),float('inf'))
         self.food = set()
         self.lastfood = float('inf')
+        self.ghostlocations = []
     # This function is run when the agent is created, and it has access
     # to state information, so we use it to build a map for the agent.
     def registerInitialState(self, state):
@@ -183,9 +184,9 @@ class MDPAgent(Agent):
             self.map.setValue(food[i][0], food[i][1], '*')
 
     def updateGhosts(self, state) :
-        locations = api.ghosts(state)
-        for i in range(len(locations)) :
-            self.map.setValue(int(locations[i][0]),int(locations[i][1]), '-')
+        self.ghostlocations = api.ghosts(state)
+        for i in range(len(self.ghostlocations)) :
+            self.map.setValue(int(self.ghostlocations[i][0]),int(self.ghostlocations[i][1]), '-')
 
     def getReward(self, loc) :
         map_value = self.map.getValue(int(loc[0]), int(loc[1]))
@@ -211,11 +212,13 @@ class MDPAgent(Agent):
             count += 1
             for x in range(1,self.map.getWidth()-1) :
                 for y in range(1,self.map.getHeight()-1) :
+                    if self.map.getValue(x,y) == '%' :
+                        self.utilmap.setValue(int(x), int(y), 0.0)
+                        continue
                     for direction in all_directions : # run for all directions not just legal.
                         # print direction, i
                         vec = Actions.directionToVector(direction)
                         loc = (int(x) + int(vec[0]), int(y) + int(vec[1]))
-
 
                         # vectors and locations for either side of the current direction
                         side_a = [int(vec[1]),int(vec[0])]
@@ -234,16 +237,13 @@ class MDPAgent(Agent):
                             rewards = [self.getReward([int(x),int(y)]), self.prevmap.getValue(loc[0], loc[1]), self.prevmap.getValue(loc_a[0], loc_a[1]), self.prevmap.getValue(loc_b[0], loc_b[1])]
 
                         # Calculate the sum part of Bellman eq here
-                        gamma = 0.7
+                        gamma = 1
                         rewardsum = (rewards[1]*0.8) + (rewards[2]*0.1) + (rewards[3]*0.1)
                         sumpu.append(gamma*rewardsum)
 
                     # Calculate final U(s) value
                     U = rewards[0] + max(sumpu)
                     sumpu = []
-                    if self.map.getValue(int(x), int(y)) == '%' :
-                        U = 0-U
-
                     # Sum each U value to calculate a difference to control while loop
                     if (x == self.map.getWidth()-2) and (y == self.map.getHeight()-2) :
                         diff = self.prevmap.getValue(int(x), int(y)) - U
@@ -271,6 +271,8 @@ class MDPAgent(Agent):
         # Update utility maps
         self.BellmanUpdate(state, all_directions)
 
+        # Update ghost location values
+
         # save all utilities around pacman, in legal directions
         U_all = []
         for i in range(len(legal)) :
@@ -288,5 +290,8 @@ class MDPAgent(Agent):
         self.previous = pacman
         #raw_input('Press <ENTER> to continue')
 
+        self.map.prettyDisplay()
+        self.prevmap.prettyDisplay()
+        raw_input('Press ENTER to continue')
         # move
         return api.makeMove(move, legal)
