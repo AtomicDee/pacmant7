@@ -258,7 +258,7 @@ class MDPAgent(Agent):
                     self.utilmap.prettyDisplay()
 
                     # Sum each U value to calculate a difference to control while loop
-                    diff = self.prevmap.getValue(int(x), int(y)) - self.utilmap.getValue(int(x), int(y))
+                    diff = self.prevmap.getValue(int(x), int(y)) - U
                     print "Difference : ", diff
 
 
