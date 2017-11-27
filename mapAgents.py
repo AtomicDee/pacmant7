@@ -233,8 +233,8 @@ class MDPAgent(Agent):
                             rewards = [self.getReward([int(x),int(y)]), self.getReward(loc), self.getReward(loc_a), self.getReward(loc_b)]
                         else :
                             rewards = [self.getReward([int(x),int(y)]), self.prevmap.getValue(loc[0], loc[1]), self.prevmap.getValue(loc_a[0], loc_a[1]), self.prevmap.getValue(loc_b[0], loc_b[1])]
-                        print "Rewards : ", rewards, " Direction : ", direction
-                        raw_input("Press Enter to continue : ")
+                        # print "Rewards : ", rewards, " Direction : ", direction
+                        # raw_input("Press Enter to continue : ")
 
                         # Calculate the sum part of U(s) here
                         gamma = 0.5
@@ -242,25 +242,24 @@ class MDPAgent(Agent):
                         sumpu.append((gamma**i)*rewardsum)
 
                     # Calculate final U(s) value
-                    print "sumpu : ", sumpu
+                    # print "sumpu : ", sumpu
                     U = rewards[0] + max(sumpu)
                     sumpu = []
-                    # set U
-                    print "U : ", U
-                    # print "max(U): ", max(U)
-                    print "Previous utilmap value: ", self.prevmap.getValue(int(x), int(y))
-                    raw_input("Press Enter to continue : ")
-
                     if self.map.getValue(int(x), int(y)) == '%' :
                         U = 0-U
+                    # set U
+                    # print "U : ", U
+                    # print "max(U): ", max(U)
+                    # print "Previous utilmap value: ", self.prevmap.getValue(int(x), int(y))
+                    # Sum each U value to calculate a difference to control while loop
+                    if (x == self.map.getWidth()-1) and (y == self.map.getHeight()-1) :
+                        diff = self.prevmap.getValue(int(x), int(y)) - U
+                        print "Difference : ", diff
+                        raw_input("Press Enter to continue : ")
+
                     self.utilmap.setValue(int(x), int(y), U)
                     # U = []
                     self.utilmap.prettyDisplay()
-
-                    # Sum each U value to calculate a difference to control while loop
-                    diff = self.prevmap.getValue(int(x), int(y)) - U
-                    print "Difference : ", diff
-
 
             # Set previous map as the newly calculated one
             self.prevmap = self.utilmap
